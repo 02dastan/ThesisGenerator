@@ -1,0 +1,109 @@
+{% extends "admin_base.html" %}
+{% block title %}Настройки — DiplomaSpark{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-white">Настройки</h2>
+    <p class="text-gray-400 text-sm mt-1">Параметры генерации и системы</p>
+</div>
+
+{% if success %}
+<div class="bg-green-500/20 border border-green-500/40 text-green-300 rounded-lg px-4 py-3 mb-6 text-sm">
+    Настройки сохранены
+</div>
+{% endif %}
+{% if pw_error %}
+<div class="bg-red-500/20 border border-red-500/40 text-red-300 rounded-lg px-4 py-3 mb-6 text-sm">
+    {{ pw_error }}
+</div>
+{% endif %}
+
+<!-- Generation Settings -->
+<form method="post" action="/admin/settings/save" class="space-y-4 mb-8">
+    <div class="bg-gray-900 rounded-xl border border-white/5 p-6">
+        <h3 class="text-white font-semibold mb-5 text-lg">Параметры генерации</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Модель по умолчанию</label>
+                <input type="text" name="default_model" value="{{ settings.get('default_model', 'gpt-4-turbo') }}"
+                    class="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-indigo-400 transition text-sm">
+                <p class="text-gray-600 text-xs mt-1">gpt-4-turbo, claude-3-opus-20240229, gemini-1.5-flash...</p>
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Максимум тем</label>
+                <input type="number" name="max_topics_per_request" min="1" max="10"
+                    value="{{ settings.get('max_topics_per_request', 5) }}"
+                    class="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-indigo-400 transition text-sm">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Температура ({{ settings.get('temperature', 0.7) }})</label>
+                <input type="range" name="temperature" min="0" max="1" step="0.05"
+                    value="{{ settings.get('temperature', 0.7) }}"
+                    class="w-full" oninput="this.previousElementSibling.textContent = 'Температура (' + this.value + ')'">
+                <div class="flex justify-between text-xs text-gray-600 mt-1">
+                    <span>0 — консервативно</span>
+                    <span>1 — креативно</span>
+                </div>
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Таймаут запроса (сек)</label>
+                <input type="number" name="timeout_seconds" min="5" max="120"
+                    value="{{ settings.get('timeout_seconds', 30) }}"
+                    class="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-indigo-400 transition text-sm">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Лимит запросов с IP в час</label>
+                <input type="number" name="rate_limit_per_ip_per_hour" min="1" max="100"
+                    value="{{ settings.get('rate_limit_per_ip_per_hour', 10) }}"
+                    class="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-indigo-400 transition text-sm">
+            </div>
+        </div>
+        <div class="flex gap-6 mt-5">
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" name="save_all_requests" {% if settings.get('save_all_requests', True) %}checked{% endif %} class="w-4 h-4 accent-indigo-500">
+                <span class="text-gray-300 text-sm">Сохранять запросы студентов в лог</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" name="enable_pdf_export" {% if settings.get('enable_pdf_export', True) %}checked{% endif %} class="w-4 h-4 accent-indigo-500">
+                <span class="text-gray-300 text-sm">Разрешить экспорт в PDF</span>
+            </label>
+        </div>
+    </div>
+    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition">
+        Сохранить настройки
+    </button>
+</form>
+
+<!-- Specialties -->
+<div class="bg-gray-900 rounded-xl border border-white/5 p-6 mb-8">
+    <h3 class="text-white font-semibold mb-4 text-lg">Список специальностей</h3>
+    <form method="post" action="/admin/specialties/save">
+        <textarea name="specialties_text" rows="10"
+            class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-indigo-400 transition text-sm font-mono">{% if specialties %}{{ specialties | join('\n') }}{% endif %}</textarea>
+        <p class="text-gray-600 text-xs mt-2">По одной специальности на строку. Последней строкой добавьте «Другое».</p>
+        <button type="submit" class="mt-3 bg-gray-700 hover:bg-gray-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition">
+            Сохранить список
+        </button>
+    </form>
+</div>
+
+<!-- Change Password -->
+<div class="bg-gray-900 rounded-xl border border-white/5 p-6">
+    <h3 class="text-white font-semibold mb-4 text-lg">Смена пароля</h3>
+    <form method="post" action="/admin/settings/change_password" class="space-y-3">
+        <div>
+            <label class="block text-gray-400 text-sm mb-1">Текущий пароль</label>
+            <input type="password" name="current_password" required
+                class="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-indigo-400 transition text-sm">
+        </div>
+        <div>
+            <label class="block text-gray-400 text-sm mb-1">Новый пароль</label>
+            <input type="password" name="new_password" required minlength="6"
+                class="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-indigo-400 transition text-sm">
+        </div>
+        <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition">
+            Сменить пароль
+        </button>
+    </form>
+</div>
+{% endblock %}

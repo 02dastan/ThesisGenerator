@@ -1,0 +1,66 @@
+{% extends "admin_base.html" %}
+{% block title %}Промпты — DiplomaSpark{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-white">Редактор промпта</h2>
+    <p class="text-gray-400 text-sm mt-1">Системный промпт, который отправляется в AI при каждом запросе</p>
+</div>
+
+{% if success %}
+<div class="bg-green-500/20 border border-green-500/40 text-green-300 rounded-lg px-4 py-3 mb-6 text-sm">
+    Промпт сохранён
+</div>
+{% endif %}
+
+<form method="post" action="/admin/prompts/save">
+    <div class="bg-gray-900 rounded-xl border border-white/5 p-6">
+        <div class="flex items-center justify-between mb-3">
+            <label class="text-white font-semibold">Системный промпт</label>
+            <span id="charCount" class="text-gray-500 text-xs">0 символов</span>
+        </div>
+        <textarea id="promptText" name="prompt_text" rows="18"
+            oninput="document.getElementById('charCount').textContent = this.value.length + ' символов'"
+            class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-indigo-400 transition text-sm font-mono leading-relaxed resize-y">{{ prompt }}</textarea>
+        <p class="text-gray-600 text-xs mt-2">
+            Этот текст задаёт общую роль и поведение AI. Он дополняется специфическим запросом студента.
+            Изменения применяются немедленно без перезапуска.
+        </p>
+    </div>
+    <div class="flex gap-3 mt-4">
+        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition">
+            Сохранить промпт
+        </button>
+        <button type="button" onclick="resetPrompt()" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-5 py-3 rounded-xl transition text-sm">
+            Сбросить к дефолту
+        </button>
+    </div>
+</form>
+
+<div class="mt-6 bg-gray-900/50 rounded-xl p-4 border border-white/5">
+    <h3 class="text-gray-300 text-sm font-semibold mb-2">Переменные пользовательского промпта (добавляются автоматически)</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-mono">
+        {% for var in ['{specialty}', '{interests}', '{resources}', '{deadline}', '{work_type}', '{level}', '{use_ai}', '{max_topics}'] %}
+        <span class="bg-gray-800 text-indigo-300 px-2 py-1 rounded">{{ var }}</span>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const DEFAULT_PROMPT = `Ты — эксперт по академическим исследованиям и научному руководству дипломных работ.
+Твоя задача — генерировать оригинальные, актуальные и выполнимые темы дипломных работ.
+Будь конкретным, практичным и оригинальным. Учитывай уровень студента, его интересы и доступные ресурсы.
+Всегда возвращай ТОЛЬКО валидный JSON без markdown-обёртки.`;
+
+document.getElementById('charCount').textContent = document.getElementById('promptText').value.length + ' символов';
+
+function resetPrompt() {
+    if (confirm('Сбросить промпт к значению по умолчанию?')) {
+        document.getElementById('promptText').value = DEFAULT_PROMPT;
+        document.getElementById('charCount').textContent = DEFAULT_PROMPT.length + ' символов';
+    }
+}
+</script>
+{% endblock %}

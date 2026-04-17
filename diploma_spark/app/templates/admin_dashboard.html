@@ -1,0 +1,93 @@
+{% extends "admin_base.html" %}
+{% block title %}Дашборд — DiplomaSpark{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-white">Дашборд</h2>
+    <p class="text-gray-400 text-sm mt-1">Обзор системы</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-gray-900 rounded-xl p-5 border border-white/5">
+        <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Всего генераций</p>
+        <p class="text-3xl font-extrabold text-white">{{ stats.get('total_requests', 0) }}</p>
+    </div>
+    <div class="bg-gray-900 rounded-xl p-5 border border-white/5">
+        <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Активных провайдеров</p>
+        <p class="text-3xl font-extrabold {% if enabled_count > 0 %}text-green-400{% else %}text-red-400{% endif %}">{{ enabled_count }}</p>
+    </div>
+    <div class="bg-gray-900 rounded-xl p-5 border border-white/5">
+        <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Специальностей</p>
+        <p class="text-3xl font-extrabold text-indigo-400">{{ stats.get('specialty_counter', {})|length }}</p>
+    </div>
+    <div class="bg-gray-900 rounded-xl p-5 border border-white/5">
+        <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Лимит IP/час</p>
+        <p class="text-3xl font-extrabold text-yellow-400">{{ settings.get('rate_limit_per_ip_per_hour', 10) }}</p>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <a href="/admin/keys" class="bg-gray-900 rounded-xl p-5 border border-white/5 hover:border-indigo-500/40 transition group">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 bg-indigo-600/20 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                </svg>
+            </div>
+            <h3 class="text-white font-semibold group-hover:text-indigo-300 transition">API Ключи</h3>
+        </div>
+        <p class="text-gray-400 text-sm">Управление ключами провайдеров AI</p>
+        {% if enabled_count == 0 %}
+        <p class="text-red-400 text-xs mt-2 font-medium">Нет активных ключей!</p>
+        {% else %}
+        <p class="text-green-400 text-xs mt-2 font-medium">{{ enabled_count }} активных</p>
+        {% endif %}
+    </a>
+
+    <a href="/admin/stats" class="bg-gray-900 rounded-xl p-5 border border-white/5 hover:border-indigo-500/40 transition group">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 bg-purple-600/20 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <h3 class="text-white font-semibold group-hover:text-purple-300 transition">Статистика</h3>
+        </div>
+        <p class="text-gray-400 text-sm">Аналитика и логи</p>
+    </a>
+
+    <a href="/admin/settings" class="bg-gray-900 rounded-xl p-5 border border-white/5 hover:border-indigo-500/40 transition group">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 bg-yellow-600/20 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                </svg>
+            </div>
+            <h3 class="text-white font-semibold group-hover:text-yellow-300 transition">Настройки</h3>
+        </div>
+        <p class="text-gray-400 text-sm">Модель, температура, лимиты</p>
+        <p class="text-gray-500 text-xs mt-2">Модель: {{ settings.get('default_model', '—') }}</p>
+    </a>
+</div>
+
+<!-- Top Specialties -->
+{% if stats.get('specialty_counter') %}
+<div class="bg-gray-900 rounded-xl p-5 border border-white/5">
+    <h3 class="text-white font-semibold mb-4">Топ специальностей</h3>
+    <div class="space-y-2">
+        {% set sorted_spec = stats.specialty_counter.items() | list | sort(attribute='1', reverse=True) %}
+        {% for name, count in sorted_spec[:5] %}
+        <div class="flex items-center gap-3">
+            <span class="text-gray-300 text-sm flex-1">{{ name }}</span>
+            <div class="flex-1 bg-gray-800 rounded-full h-2">
+                <div class="bg-indigo-500 h-2 rounded-full" style="width: {{ [count * 100 // sorted_spec[0][1], 100]|min }}%"></div>
+            </div>
+            <span class="text-gray-400 text-sm w-8 text-right">{{ count }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

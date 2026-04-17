@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  diploma_spark:
+    build: .
+    container_name: diploma_spark
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/app/data
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Moscow
+      - ADMIN_PASSWORD=admin123

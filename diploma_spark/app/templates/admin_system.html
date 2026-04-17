@@ -1,0 +1,64 @@
+{% extends "admin_base.html" %}
+{% block title %}Система — DiplomaSpark{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-white">Системная информация</h2>
+    <p class="text-gray-400 text-sm mt-1">Информация о среде выполнения</p>
+</div>
+
+<!-- System Info -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-gray-900 rounded-xl p-5 border border-white/5">
+        <p class="text-gray-400 text-xs uppercase tracking-wide mb-2">Python</p>
+        <p class="text-white text-sm font-mono">{{ python_version.split(' ')[0] }}</p>
+    </div>
+    <div class="bg-gray-900 rounded-xl p-5 border border-white/5">
+        <p class="text-gray-400 text-xs uppercase tracking-wide mb-2">Занято диска</p>
+        <p class="text-white text-lg font-bold">{{ disk.human }}</p>
+        <p class="text-gray-600 text-xs">{{ disk.files }} файлов</p>
+    </div>
+    <div class="bg-gray-900 rounded-xl p-5 border border-white/5">
+        <p class="text-gray-400 text-xs uppercase tracking-wide mb-2">Платформа</p>
+        <p class="text-white text-xs font-mono truncate" title="{{ platform }}">{{ platform[:40] }}</p>
+    </div>
+</div>
+
+<!-- Cache -->
+<div class="bg-gray-900 rounded-xl border border-white/5 p-5 mb-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h3 class="text-white font-semibold">Кэш</h3>
+            <p class="text-gray-400 text-sm">Временные файлы приложения</p>
+        </div>
+        <form method="post" action="/admin/clear_cache" onsubmit="return confirm('Очистить кэш?')">
+            <button type="submit" class="bg-orange-700 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                Очистить кэш
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Packages -->
+<div class="bg-gray-900 rounded-xl border border-white/5 p-5">
+    <h3 class="text-white font-semibold mb-4">Установленные пакеты ({{ packages|length }})</h3>
+    <div class="max-h-80 overflow-y-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-gray-500 text-xs uppercase border-b border-white/5">
+                    <th class="text-left pb-2 pr-4">Пакет</th>
+                    <th class="text-left pb-2">Версия</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                {% for name, version in packages %}
+                <tr>
+                    <td class="py-1.5 pr-4 text-gray-300">{{ name }}</td>
+                    <td class="py-1.5 text-gray-500 font-mono text-xs">{{ version }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

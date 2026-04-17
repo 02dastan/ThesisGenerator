@@ -1,0 +1,143 @@
+{% extends "admin_base.html" %}
+{% block title %}Статистика — DiplomaSpark{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h2 class="text-2xl font-bold text-white">Статистика</h2>
+        <p class="text-gray-400 text-sm mt-1">Аналитика использования сервиса</p>
+    </div>
+    <div class="flex gap-3">
+        <a href="/admin/download_logs"
+            class="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded-lg text-sm transition">
+            Скачать CSV
+        </a>
+        <form method="post" action="/admin/clear_logs" onsubmit="return confirm('Удалить все логи?')">
+            <button type="submit" class="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                Очистить логи
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Key Numbers -->
+<div class="grid grid-cols-3 gap-4 mb-8">
+    <div class="bg-gray-900 rounded-xl p-5 border border-white/5 text-center">
+        <p class="text-4xl font-extrabold text-white">{{ stats.get('total_requests', 0) }}</p>
+        <p class="text-gray-400 text-sm mt-1">Всего генераций</p>
+    </div>
+    <div class="bg-gray-900 rounded-xl p-5 border border-white/5 text-center">
+        <p class="text-4xl font-extrabold text-indigo-400">{{ stats.get('specialty_counter', {})|length }}</p>
+        <p class="text-gray-400 text-sm mt-1">Уникальных специальностей</p>
+    </div>
+    <div class="bg-gray-900 rounded-xl p-5 border border-white/5 text-center">
+        <p class="text-4xl font-extrabold text-purple-400">{{ stats.get('keywords_counter', {})|length }}</p>
+        <p class="text-gray-400 text-sm mt-1">Уникальных ключевых слов</p>
+    </div>
+</div>
+
+<!-- Chart -->
+<div class="bg-gray-900 rounded-xl border border-white/5 p-6 mb-6">
+    <h3 class="text-white font-semibold mb-4">Генерации по дням (последние 30 дней)</h3>
+    <canvas id="dailyChart" height="80"></canvas>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <!-- Top Specialties -->
+    <div class="bg-gray-900 rounded-xl border border-white/5 p-5">
+        <h3 class="text-white font-semibold mb-4">Топ-10 специальностей</h3>
+        {% if top_specialties %}
+        <div class="space-y-2">
+            {% for name, count in top_specialties %}
+            <div class="flex items-center gap-2">
+                <span class="text-gray-300 text-sm flex-1 truncate" title="{{ name }}">{{ name }}</span>
+                <span class="text-gray-400 text-sm font-bold">{{ count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-600 text-sm">Нет данных</p>
+        {% endif %}
+    </div>
+
+    <!-- Top Keywords -->
+    <div class="bg-gray-900 rounded-xl border border-white/5 p-5">
+        <h3 class="text-white font-semibold mb-4">Топ-20 ключевых слов</h3>
+        {% if top_keywords %}
+        <div class="flex flex-wrap gap-2">
+            {% for kw, count in top_keywords %}
+            <span class="inline-flex items-center gap-1 bg-indigo-900/40 text-indigo-300 px-3 py-1 rounded-full text-xs">
+                {{ kw }} <span class="text-indigo-500">{{ count }}</span>
+            </span>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-600 text-sm">Нет данных</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Error Log -->
+<div class="bg-gray-900 rounded-xl border border-white/5 p-5">
+    <h3 class="text-white font-semibold mb-4">Лог ошибок API (последние 50)</h3>
+    {% if errors %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-gray-500 text-xs uppercase border-b border-white/5">
+                    <th class="text-left pb-2 pr-4">Время</th>
+                    <th class="text-left pb-2 pr-4">Провайдер</th>
+                    <th class="text-left pb-2">Ошибка</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                {% for err in errors | reverse %}
+                <tr>
+                    <td class="py-2 pr-4 text-gray-500 whitespace-nowrap">{{ err.get('timestamp', '')[:19] }}</td>
+                    <td class="py-2 pr-4 text-yellow-400">{{ err.get('provider', '?') }}</td>
+                    <td class="py-2 text-red-300 text-xs max-w-xs truncate" title="{{ err.get('error', '') }}">{{ err.get('error', '')[:100] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-gray-600 text-sm">Ошибок нет</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ctx = document.getElementById('dailyChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: {{ chart_labels | safe }},
+        datasets: [{
+            label: 'Генераций',
+            data: {{ chart_data | safe }},
+            backgroundColor: 'rgba(99, 102, 241, 0.6)',
+            borderColor: 'rgba(99, 102, 241, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {legend: {display: false}},
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {color: '#6b7280', stepSize: 1},
+                grid: {color: 'rgba(255,255,255,0.05)'},
+            },
+            x: {
+                ticks: {color: '#6b7280', maxRotation: 45},
+                grid: {display: false},
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

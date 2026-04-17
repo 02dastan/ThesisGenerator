@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiplomaSpark — Генератор идей дипломных работ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="min-h-screen" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);">
+
+<!-- Header -->
+<header class="py-6 px-4 text-center">
+    <div class="flex items-center justify-center gap-3 mb-1">
+        <svg class="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+        <h1 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight">DiplomaSpark</h1>
+    </div>
+    <p class="text-indigo-300 text-lg md:text-xl mt-2">Сгенерируй идею диплома, от которой руководитель офигеет</p>
+</header>
+
+<!-- Anti-Panic Button -->
+<div class="text-center mb-4">
+    <button id="antiPanicBtn" onclick="toggleAntiPanic()"
+        class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-full text-sm font-semibold transition-all shadow-lg">
+        🆘 У меня вообще нет идей, спасите!
+    </button>
+</div>
+
+<main class="container mx-auto px-4 pb-16 max-w-4xl">
+
+    <!-- Anti-Panic Form -->
+    <div id="antiPanicForm" class="hidden mb-6 bg-red-950/40 backdrop-blur border border-red-500/30 rounded-2xl p-6">
+        <h2 class="text-xl font-bold text-red-300 mb-3">Режим «Анти-паника»</h2>
+        <p class="text-red-200 text-sm mb-4">Просто скажи, что умеешь — мы подберём тему под тебя</p>
+        <div class="flex gap-3">
+            <input id="panicSkills" type="text" placeholder="Например: умею писать на Python, люблю кино..."
+                class="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-red-400/30 text-white placeholder-red-300/50 focus:outline-none focus:border-red-400">
+            <button onclick="generatePanic()"
+                class="bg-red-600 hover:bg-red-700 px-5 py-3 rounded-xl text-white font-bold transition">
+                Спасти!
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Form -->
+    <div id="mainFormContainer" class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 md:p-8 shadow-2xl border border-white/10">
+        <form id="generateForm" class="space-y-5">
+
+            <!-- Specialty -->
+            <div>
+                <label class="block text-white font-semibold mb-2">Специальность *</label>
+                <select name="specialty" id="specialtySelect"
+                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:border-indigo-400 transition">
+                    {% for s in specialties %}
+                    <option value="{{ s }}">{{ s }}</option>
+                    {% endfor %}
+                </select>
+                <input id="specialtyOther" type="text" name="specialty_other" placeholder="Введите специальность"
+                    class="hidden w-full mt-2 px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-indigo-400">
+            </div>
+
+            <!-- Interests -->
+            <div>
+                <label class="block text-white font-semibold mb-2">Ваши интересы *</label>
+                <input type="text" name="interests" required
+                    placeholder="Python, компьютерное зрение, Telegram-боты, финансы..."
+                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-indigo-400 transition">
+                <p class="text-indigo-300 text-xs mt-1">Напишите через запятую, что вам нравится</p>
+            </div>
+
+            <!-- Resources -->
+            <div>
+                <label class="block text-white font-semibold mb-2">Доступные ресурсы</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <label class="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-3 cursor-pointer hover:bg-white/10 transition">
+                        <input type="checkbox" name="res_data" class="w-4 h-4 accent-indigo-500">
+                        <span class="text-white text-sm">Доступ к реальным данным</span>
+                    </label>
+                    <label class="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-3 cursor-pointer hover:bg-white/10 transition">
+                        <input type="checkbox" name="res_lab" class="w-4 h-4 accent-indigo-500">
+                        <span class="text-white text-sm">Лабораторное оборудование</span>
+                    </label>
+                    <label class="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-3 cursor-pointer hover:bg-white/10 transition">
+                        <input type="checkbox" name="res_server" class="w-4 h-4 accent-indigo-500">
+                        <span class="text-white text-sm">Бесплатный хостинг / сервер</span>
+                    </label>
+                    <label class="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-3 cursor-pointer hover:bg-white/10 transition">
+                        <input type="checkbox" name="res_code" class="w-4 h-4 accent-indigo-500">
+                        <span class="text-white text-sm">Навыки программирования</span>
+                    </label>
+                </div>
+                <input type="text" name="res_other" placeholder="Другие ресурсы (опционально)"
+                    class="w-full mt-2 px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-indigo-400 transition text-sm">
+            </div>
+
+            <!-- Two columns -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Deadline -->
+                <div>
+                    <label class="block text-white font-semibold mb-2">Срок до защиты</label>
+                    <select name="deadline" class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:border-indigo-400 transition">
+                        <option>1 месяц</option>
+                        <option>2-3 месяца</option>
+                        <option selected>4-6 месяцев</option>
+                        <option>Больше 6 месяцев</option>
+                    </select>
+                </div>
+                <!-- Level -->
+                <div>
+                    <label class="block text-white font-semibold mb-2">Уровень образования</label>
+                    <div class="flex gap-3">
+                        <label class="flex-1 flex items-center justify-center gap-2 bg-white/5 rounded-lg px-4 py-3 cursor-pointer hover:bg-white/10 transition border border-white/10">
+                            <input type="radio" name="level" value="бакалавр" checked class="accent-indigo-500">
+                            <span class="text-white text-sm">Бакалавр</span>
+                        </label>
+                        <label class="flex-1 flex items-center justify-center gap-2 bg-white/5 rounded-lg px-4 py-3 cursor-pointer hover:bg-white/10 transition border border-white/10">
+                            <input type="radio" name="level" value="магистр" class="accent-indigo-500">
+                            <span class="text-white text-sm">Магистр</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Work Type -->
+            <div>
+                <label class="block text-white font-semibold mb-2">Тип работы</label>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {% for wt in ["Теоретическая", "Экспериментальная", "Разработка прототипа", "Анализ данных", "Смешанный"] %}
+                    <label class="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 cursor-pointer hover:bg-white/10 transition border border-white/10">
+                        <input type="radio" name="work_type" value="{{ wt }}" {% if wt == "Смешанный" %}checked{% endif %} class="accent-indigo-500">
+                        <span class="text-white text-xs">{{ wt }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Use AI -->
+            <div>
+                <label class="flex items-center gap-3 bg-indigo-900/30 rounded-xl px-4 py-3 cursor-pointer hover:bg-indigo-900/50 transition border border-indigo-500/20">
+                    <input type="checkbox" name="use_ai" id="useAiCheck" class="w-5 h-5 accent-indigo-500">
+                    <div>
+                        <span class="text-white font-semibold">Хочу использовать AI в дипломе</span>
+                        <p class="text-indigo-300 text-xs mt-0.5">Темы будут более технологичными и современными</p>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" id="submitBtn"
+                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-4 rounded-xl text-lg font-bold transition-all shadow-lg hover:shadow-indigo-500/25 active:scale-95">
+                Сгенерировать идеи
+            </button>
+        </form>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden text-center py-10">
+            <div class="spinner mx-auto mb-4"></div>
+            <p class="text-indigo-200 text-lg font-medium">Анализируем ваши данные...</p>
+            <p class="text-indigo-400 text-sm mt-1">Это займёт 10–30 секунд</p>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="mt-8 space-y-6"></div>
+
+        <!-- New Request Button -->
+        <div id="newRequestBtn" class="hidden text-center mt-6">
+            <button onclick="resetForm()"
+                class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-semibold transition">
+                Новый запрос
+            </button>
+        </div>
+    </div>
+
+    <!-- Favorites -->
+    <div id="favoritesSection" class="mt-8 hidden">
+        <h2 class="text-white text-xl font-bold mb-4">Избранное</h2>
+        <div id="favoritesList" class="space-y-4"></div>
+    </div>
+
+</main>
+
+<!-- History Panel -->
+<div id="historyPanel" class="fixed bottom-4 right-4 z-50">
+    <button onclick="toggleHistory()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full text-sm shadow-lg transition">
+        История
+    </button>
+    <div id="historyDropdown" class="hidden absolute bottom-12 right-0 w-80 bg-gray-900 border border-white/10 rounded-xl shadow-2xl p-4 max-h-96 overflow-y-auto">
+        <h3 class="text-white font-bold mb-3">История генераций</h3>
+        <div id="historyList"></div>
+    </div>
+</div>
+
+<script src="/static/script.js"></script>
+<script>
+// Specialty "Другое" toggle
+document.getElementById('specialtySelect').addEventListener('change', function() {
+    const other = document.getElementById('specialtyOther');
+    if (this.value === 'Другое') {
+        other.classList.remove('hidden');
+        other.required = true;
+    } else {
+        other.classList.add('hidden');
+        other.required = false;
+    }
+});
+</script>
+</body>
+</html>
